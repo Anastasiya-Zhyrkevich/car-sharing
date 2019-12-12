@@ -78,7 +78,7 @@ public:
   std::vector <PurchasePackage> purchases;
   unsigned int cost; 
 
-  Purchase() {}
+  Purchase() : cost(0) {}
   Purchase(std::vector <PurchasePackage> purchases, unsigned int cost): purchases(purchases), cost(cost) {}
 
   Purchase operator+ (const Purchase &other) {
@@ -109,7 +109,8 @@ std::map<int, CostPackage> getPackages() {
 }
 
 
-std::vector<Request> applyCostPackage(const std::vector<Request>& requests, const CostPackage & package) {
+std::vector<Request> applyCostPackage(const std::vector<Request>& requests, 
+      const CostPackage & package) {
   unsigned int dist = package.dist;
   unsigned int t = package.t;
 
@@ -118,7 +119,6 @@ std::vector<Request> applyCostPackage(const std::vector<Request>& requests, cons
     if (requests[i].dist <= dist && requests[i].t < t) {
       dist -= requests[i].dist;
       t -= requests[i].t;
-      std::cout << dist << ' ' << t << std::endl;
       continue;
     }
 
@@ -127,7 +127,7 @@ std::vector<Request> applyCostPackage(const std::vector<Request>& requests, cons
     }
     break;
   }
-  // std::cout << "applied" << std::endl; 
+
   return left;
 }
 
@@ -144,29 +144,19 @@ Purchase getOptimalPurchases(std::vector<Request> requests,
 
   // Try to apply CostPackage
   for (int i = 0; i < packages.size(); i++) {
-    std::vector<Request> requestsLeft = applyCostPackage(requests, packages[i]);
-
-    for (auto request : requests) {
-      std::cout << request.type << ' ' << std::endl;
-    }
-    std::cout << std::endl;
-    break;
-
+    std::vector<Request> requestsLeft = applyCostPackage(requests, packages.at(i));
     if (requestsLeft.size() == requests.size()) {
       continue;
     }
+    std::cout << "Apply " << packages.at(i).name << ' ' << requestsLeft.size() << std::endl;
 
     Purchase optimalTailPurchase = getOptimalPurchases(requestsLeft, packages, useWaitPackage);
 
-    std::cout << "tail: " << optimalTailPurchase.cost << std::endl;
-
-
     std::vector<PurchasePackage> currentVector { PurchasePackage(i, 0) };
-    Purchase current = Purchase(currentVector, packages[i].cost);
-    Purchase result = optimalTailPurchase + current;
+    Purchase current = Purchase(currentVector, packages.at(i).cost);
+    Purchase result = current + optimalTailPurchase;
 
-    std::cout << "Calculated: " << result.cost << std::endl;
-
+    std::cout << "Calculated: " << current.cost << ' ' << optimalTailPurchase.cost << ' ' << result.cost << std::endl;
 
     if (result.cost < optimalCost) {
       optimalCost = result.cost;
@@ -213,6 +203,8 @@ public:
     }
 
     Purchase purchase = getOptimalPurchases(requests, packages, useWaitPackage);
+    std::cout << "Purchases" << std::endl;
+
     for (int i = 0; i < purchase.purchases.size(); i++) {
       std::cout << packages[purchase.purchases[i].id].toString() << std::endl; 
     }

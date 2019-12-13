@@ -60,7 +60,7 @@ public:
   
   std::string toString() {
     return "Buy per time pay package with name=" + name + 
-    "use_cost=" + std::to_string(use) + "wait_cost=" + std::to_string(wait); 
+    " use_cost=" + std::to_string(use) + " wait_cost=" + std::to_string(wait); 
   }
 };
 
@@ -98,7 +98,6 @@ public:
 std::map<int, CostPackage> getPackages() {
   std::map<int, CostPackage> packages;
 
-  // packages[0] = UseWaitPackage(0, "Pay-per-minute", 30, 7);
   packages[0] = CostPackage(0, "3-hours", 2400, 35, 29, 3 * 60);
   packages[1] = CostPackage(1, "6-hours", 3400, 55, 29, 6 * 60);
   packages[2] = CostPackage(2, "9-hours", 4200, 70, 29, 9 * 60);
@@ -131,6 +130,14 @@ std::vector<Request> applyCostPackage(const std::vector<Request>& requests,
   return left;
 }
 
+std::vector<Request> getRequestsLeft(std::vector<Request>& requests, int startIndex) {
+  std::vector<Request> result;
+  for (int i = startIndex; i < requests.size(); i++) {
+    result.push_back(requests[i]);
+  }
+  return result;
+}
+
 
 Purchase getOptimalPurchases(std::vector<Request> requests, 
       const std::map<int, CostPackage> & packages, UseWaitPackage useWaitPackage) {
@@ -159,7 +166,29 @@ Purchase getOptimalPurchases(std::vector<Request> requests,
     }
   }
 
-  // TODO: Try to apply UseWaitPackage 
+  // Try to apply UseWaitPackage 
+  unsigned int currentCost = 0;
+  unsigned int currentTime = 0;
+  for (int i = 0; i < requests.size(); i++) {
+    std::vector<Request> requestsLeft = getRequestsLeft(requests, i + 1);
+    if (requests[i].type == USE_REQUEST) {
+      currentCost += useWaitPackage.use * requests[i].t;
+    } else {
+      currentCost += useWaitPackage.wait * requests[i].t;
+    }
+    currentTime += requests[i].t;
+
+    Purchase optimalTailPurchase = getOptimalPurchases(requestsLeft, packages, useWaitPackage);
+
+    if (currentCost + optimalTailPurchase.cost < optimalCost) {
+      std::vector<PurchasePackage> currentVector { PurchasePackage(useWaitPackage.id, currentTime) };
+      Purchase current = Purchase(currentVector, currentCost);
+      Purchase result = current + optimalTailPurchase;
+
+      optimalCost = currentCost + optimalTailPurchase.cost;
+      optimalPurchase = result;
+    }
+  }
 
   return optimalPurchase;
 }
@@ -170,7 +199,7 @@ class Solver {
 public:
   void solve(const char * in, const char * out) {
     freopen (in, "r", stdin);
-    freopen (out, "w", stdout);
+    // freopen (out, "w", stdout);
 
     int requestCnt;
     std::cin >> requestCnt;
@@ -198,10 +227,15 @@ public:
     }
 
     Purchase purchase = getOptimalPurchases(requests, packages, useWaitPackage);
-    std::cout << "Purchases" << std::endl;
+    std::cout << "Purchases for " << purchase.cost << std::endl;
 
     for (int i = 0; i < purchase.purchases.size(); i++) {
-      std::cout << packages[purchase.purchases[i].id].toString() << std::endl; 
-    }
+      unsigned int pId = purchase.purchases[i].id;
+      if (useWaitPackage.id == pId) {
+        std::cout << useWaitPackage.toString() << " for time usage period: " << purchase.purchases[i].effectiveTimeUse << std::endl; 
+      } else {
+        std::cout << packages[purchase.purchases[i].id].toString() << std::endl; 
+      }
+    } 
   }
 };

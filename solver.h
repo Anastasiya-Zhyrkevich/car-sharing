@@ -132,7 +132,6 @@ std::vector<Request> applyCostPackage(const std::vector<Request>& requests,
 }
 
 
-
 Purchase getOptimalPurchases(std::vector<Request> requests, 
       const std::map<int, CostPackage> & packages, UseWaitPackage useWaitPackage) {
   Purchase optimalPurchase;
@@ -148,15 +147,11 @@ Purchase getOptimalPurchases(std::vector<Request> requests,
     if (requestsLeft.size() == requests.size()) {
       continue;
     }
-    std::cout << "Apply " << packages.at(i).name << ' ' << requestsLeft.size() << std::endl;
-
     Purchase optimalTailPurchase = getOptimalPurchases(requestsLeft, packages, useWaitPackage);
 
     std::vector<PurchasePackage> currentVector { PurchasePackage(i, 0) };
     Purchase current = Purchase(currentVector, packages.at(i).cost);
     Purchase result = current + optimalTailPurchase;
-
-    std::cout << "Calculated: " << current.cost << ' ' << optimalTailPurchase.cost << ' ' << result.cost << std::endl;
 
     if (result.cost < optimalCost) {
       optimalCost = result.cost;
@@ -175,7 +170,7 @@ class Solver {
 public:
   void solve(const char * in, const char * out) {
     freopen (in, "r", stdin);
-    //freopen (out, "w", stdout);
+    freopen (out, "w", stdout);
 
     int requestCnt;
     std::cin >> requestCnt;

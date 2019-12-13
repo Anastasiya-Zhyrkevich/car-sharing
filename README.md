@@ -20,4 +20,4 @@ take into consideration packages.
 One package should be covered fully by one of the packages. One package can cover more than one time period. 
 
 **Run:**
-`g++ main.cpp solver.h -o main --std=c++11`
+`g++ main.cpp solver.h solver.cpp -o main --std=c++11`

@@ -138,6 +138,13 @@ std::vector<Request> getRequestsLeft(std::vector<Request>& requests, int startIn
   return result;
 }
 
+unsigned int getEffectiveTimeUse(const std::vector<Request> & requests, unsigned int requestsLeft) {
+  unsigned int effectiveTime = 0;
+  for (int i = 0; i < requests.size() - requestsLeft; i++) {
+    effectiveTime += requests[i].t;
+  }
+  return effectiveTime;
+}
 
 Purchase getOptimalPurchases(std::vector<Request> requests, 
       const std::map<int, CostPackage> & packages, UseWaitPackage useWaitPackage) {
@@ -156,7 +163,9 @@ Purchase getOptimalPurchases(std::vector<Request> requests,
     }
     Purchase optimalTailPurchase = getOptimalPurchases(requestsLeft, packages, useWaitPackage);
 
-    std::vector<PurchasePackage> currentVector { PurchasePackage(i, 0) };
+    unsigned int effectiveTimeUse = getEffectiveTimeUse(requests, requestsLeft.size());
+
+    std::vector<PurchasePackage> currentVector { PurchasePackage(i, effectiveTimeUse) };
     Purchase current = Purchase(currentVector, packages.at(i).cost);
     Purchase result = current + optimalTailPurchase;
 
@@ -232,10 +241,12 @@ public:
     for (int i = 0; i < purchase.purchases.size(); i++) {
       unsigned int pId = purchase.purchases[i].id;
       if (useWaitPackage.id == pId) {
-        std::cout << useWaitPackage.toString() << " for time usage period: " << purchase.purchases[i].effectiveTimeUse << std::endl; 
+        std::cout << useWaitPackage.toString(); 
       } else {
-        std::cout << packages[purchase.purchases[i].id].toString() << std::endl; 
+        std::cout << packages[purchase.purchases[i].id].toString(); 
       }
+
+      std::cout << " for time usage period: " << purchase.purchases[i].effectiveTimeUse << std::endl; 
     } 
   }
 };

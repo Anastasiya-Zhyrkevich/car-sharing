@@ -18,3 +18,6 @@ take into consideration packages.
 **Restrictions:**
 
 One package should be covered fully by one of the packages. One package can cover more than one time period. 
+
+**Run:**
+`g++ main.cpp solver.h -o main --std=c++11`
